@@ -1,0 +1,11 @@
+linters:
+  enable-all: true
+  disable:
+    - varnamelen
+    - wrapcheck
+    - tenv
+    - depguard
+
+
+run:
+  timeout: 5m
