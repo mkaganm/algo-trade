@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log"
-	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/mkaganm/algo-trade/collector/internal/adapters/binance"
 	"github.com/mkaganm/algo-trade/collector/internal/adapters/healthcheck"
 	"github.com/mkaganm/algo-trade/collector/internal/adapters/mongodb"
@@ -38,6 +40,30 @@ func main() {
 	// Initialize Binance WebSocket client
 	wsClient := binance.NewBinanceWebSocket(cfg.BinanceWSURL, cfg.MaxConnectionRetry, cfg.RetryDelay)
 
+	// Create a new Fiber app
+	app := fiber.New(fiber.Config{
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
+		IdleTimeout:  idleTimeout,
+	})
+
+	// Register health check endpoint
+	app.Get("/healthcheck", func(_ *fiber.Ctx) error {
+		healthcheck.CheckHandler(repo.Client)
+
+		return nil
+	})
+
+	// fixme : add recover go routine and spearete roitine function
+	// Start health check endpoint
+	go func() {
+		log.Println("Starting health check endpoint at :8080")
+
+		if err := app.Listen(":8080"); err != nil {
+			log.Printf("Failed to start health check endpoint: %v", err)
+		}
+	}()
+
 	// Create and run service
 	service := core.NewDataCollectorService(wsClient, repo)
 	if err := service.Run(ctx); err != nil {
@@ -46,21 +72,15 @@ func main() {
 		return
 	}
 
-	// Start health check endpoint
-	server := &http.Server{
-		Addr:         ":8080",
-		Handler:      healthcheck.CheckHandler(repo.Client),
-		ReadTimeout:  readTimeout,
-		WriteTimeout: writeTimeout,
-		IdleTimeout:  idleTimeout,
-	}
+	// Wait for interrupt signal to gracefully shutdown the server
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	<-c
 
-	log.Println("Starting health check endpoint at :8080")
+	log.Println("Shutting down server...")
 
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Printf("Failed to start health check endpoint: %v", err)
-
-		return
+	if err := app.Shutdown(); err != nil {
+		log.Printf("Server shutdown failed: %v", err)
 	}
 
 	log.Println("Application shutdown complete")
