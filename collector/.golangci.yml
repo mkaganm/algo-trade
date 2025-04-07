@@ -3,9 +3,8 @@ linters:
   disable:
     - varnamelen
     - wrapcheck
-    - tenv
     - depguard
-
+    - exhaustruct
 
 run:
   timeout: 5m
