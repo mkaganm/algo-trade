@@ -38,25 +38,28 @@ func (b *WebSocket) ReadMessages() (<-chan []byte, <-chan error) {
 	msgChan := make(chan []byte)
 	errChan := make(chan error)
 
-	go func() {
-		defer close(msgChan)
-		defer close(errChan)
-
-		for {
-			_, message, err := b.conn.ReadMessage()
-			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					errChan <- err
-				}
-
-				return
-			}
-
-			msgChan <- message
-		}
-	}()
+	go b.readMessagesGoroutine(msgChan, errChan)
 
 	return msgChan, errChan
+}
+
+func (b *WebSocket) readMessagesGoroutine(msgChan chan<- []byte, errChan chan<- error) {
+	defer close(msgChan)
+	defer close(errChan)
+	defer helpers.RecoverRoutine(errChan)
+
+	for {
+		_, message, err := b.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				errChan <- err
+			}
+
+			return
+		}
+
+		msgChan <- message
+	}
 }
 
 func (b *WebSocket) Close() error {
