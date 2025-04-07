@@ -17,9 +17,9 @@ const (
 )
 
 type MongoOrderBookRepository struct {
-	client     *mongo.Client
-	database   string
-	collection string
+	Client     *mongo.Client
+	Database   string
+	Collection string
 }
 
 func NewMongoOrderBookRepository(uri, database, collection string) (*MongoOrderBookRepository, error) {
@@ -32,9 +32,9 @@ func NewMongoOrderBookRepository(uri, database, collection string) (*MongoOrderB
 	}
 
 	repo := &MongoOrderBookRepository{
-		client:     client,
-		database:   database,
-		collection: collection,
+		Client:     client,
+		Database:   database,
+		Collection: collection,
 	}
 
 	// create collection with TTL index
@@ -52,7 +52,7 @@ func NewMongoOrderBookRepository(uri, database, collection string) (*MongoOrderB
 }
 
 func (m *MongoOrderBookRepository) Save(ctx context.Context, update core.OrderBookUpdate) error {
-	coll := m.client.Database(m.database).Collection(m.collection)
+	coll := m.Client.Database(m.Database).Collection(m.Collection)
 
 	_, err := coll.InsertOne(ctx, bson.M{
 		"data":       update.Data,
@@ -67,5 +67,5 @@ func (m *MongoOrderBookRepository) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), closeTimeout)
 	defer cancel()
 
-	return m.client.Disconnect(ctx)
+	return m.Client.Disconnect(ctx)
 }
