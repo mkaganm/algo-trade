@@ -54,6 +54,21 @@ services:
     networks:
       - algotrading_net
 
+  processor:
+    build:
+      context: ./processor
+      dockerfile: ./docker/Dockerfile
+    container_name: processor
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mongodb
+      - redis-stack
+    networks:
+      - algotrading_net
+
+
 volumes:
   mongodb_data:
 
