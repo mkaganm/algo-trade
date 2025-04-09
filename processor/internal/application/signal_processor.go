@@ -42,8 +42,6 @@ func (s *SignalProcessor) CalculateSMAs(prices []float64, shortPeriod, longPerio
 func (s *SignalProcessor) GenerateSignal(ctx context.Context, shortPeriod, longPeriod int) (*domain.TradeSignal, error) {
 	records, err := s.orderBookRepo.GetLatestRecords(ctx, longPeriod)
 
-	println(len(records))
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get order book records: %w", err)
 	}
