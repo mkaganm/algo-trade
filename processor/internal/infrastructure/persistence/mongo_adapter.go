@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"fmt"
+	"github.com/mkaganm/algo-trade/processor/internal/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 
@@ -40,6 +41,8 @@ func NewMongoOrderBookRepository(uri, dbName, collection string) (*MongoOrderBoo
 }
 
 func (r *MongoOrderBookRepository) GetLatestRecords(ctx context.Context, limit int) ([]domain.OrderBookRecord, error) {
+	r.collection = config.Load().CollectionName
+
 	collection := r.client.Database(r.databaseName).Collection(r.collection)
 
 	findOptions := options.Find()
@@ -61,6 +64,8 @@ func (r *MongoOrderBookRepository) GetLatestRecords(ctx context.Context, limit i
 }
 
 func (r *MongoOrderBookRepository) SaveSignal(ctx context.Context, signal domain.TradeSignal) error {
+	r.collection = config.Load().SignalsColName
+
 	collection := r.client.Database(r.databaseName).Collection(r.collection)
 	_, err := collection.InsertOne(ctx, signal)
 	if err != nil {
