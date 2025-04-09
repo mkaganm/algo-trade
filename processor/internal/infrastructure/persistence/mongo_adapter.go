@@ -13,6 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// fixme env loading
+
 type MongoOrderBookRepository struct {
 	client       *mongo.Client
 	databaseName string
