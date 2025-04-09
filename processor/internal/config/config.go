@@ -1,8 +1,11 @@
 package config
 
 import (
+	"log"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -18,13 +21,21 @@ type Config struct {
 }
 
 func Load() *Config {
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
 	shortPeriod, err := strconv.Atoi(getEnv("SHORT_PERIOD", "50"))
 	if err != nil {
+		log.Printf("Invalid SHORT_PERIOD value, using default: %v", err)
 		shortPeriod = 50
 	}
 
 	longPeriod, err := strconv.Atoi(getEnv("LONG_PERIOD", "200"))
 	if err != nil {
+		log.Printf("Invalid LONG_PERIOD value, using default: %v", err)
 		longPeriod = 200
 	}
 
