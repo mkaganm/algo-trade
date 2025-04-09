@@ -3,12 +3,12 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"github.com/mkaganm/algo-trade/processor/internal/config"
-	"go.mongodb.org/mongo-driver/bson"
 	"time"
 
+	"github.com/mkaganm/algo-trade/processor/internal/config"
 	"github.com/mkaganm/algo-trade/processor/internal/core/domain"
 	_ "github.com/mkaganm/algo-trade/processor/internal/core/ports/secondary" // fixme
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -48,7 +48,7 @@ func (r *MongoOrderBookRepository) GetLatestRecords(ctx context.Context, limit i
 	collection := r.client.Database(r.databaseName).Collection(r.collection)
 
 	findOptions := options.Find()
-	findOptions.SetSort(bson.D{{"timestamp", -1}})
+	findOptions.SetSort(bson.D{{Key: "timestamp", Value: -1}})
 	findOptions.SetLimit(int64(limit))
 
 	cursor, err := collection.Find(ctx, bson.D{}, findOptions)
@@ -69,9 +69,11 @@ func (r *MongoOrderBookRepository) SaveSignal(ctx context.Context, signal domain
 	r.collection = config.Load().SignalsColName
 
 	collection := r.client.Database(r.databaseName).Collection(r.collection)
+
 	_, err := collection.InsertOne(ctx, signal)
 	if err != nil {
 		return fmt.Errorf("failed to insert signal: %w", err)
 	}
+
 	return nil
 }

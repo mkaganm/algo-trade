@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -31,31 +32,34 @@ func NewSignalProcessor(
 
 func (s *SignalProcessor) CalculateSMAs(prices []float64, shortPeriod, longPeriod int) (shortSMA, longSMA []float64, err error) {
 	if len(prices) < longPeriod {
-		return nil, nil, fmt.Errorf("not enough data points to calculate SMAs")
+		return nil, nil, errors.New("not enough data points to calculate SMAs")
 	}
 
 	shortSMA = calculateSMA(prices, shortPeriod)
 	longSMA = calculateSMA(prices, longPeriod)
+
 	return shortSMA, longSMA, nil
 }
 
 func (s *SignalProcessor) GenerateSignal(ctx context.Context, shortPeriod, longPeriod int) (*domain.TradeSignal, error) {
 	records, err := s.orderBookRepo.GetLatestRecords(ctx, longPeriod)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get order book records: %w", err)
 	}
 
 	if len(records) < longPeriod {
-		return nil, fmt.Errorf("not enough data to process signals")
+		return nil, errors.New("not enough data to process signals")
 	}
 
 	// Extract prices
 	var prices []float64
+
 	for _, record := range records {
 		if len(record.Data.BidUpdates) > 0 {
 			price := record.Data.BidUpdates[0][0]
+
 			var p float64
+
 			fmt.Sscanf(price, "%f", &p)
 			prices = append(prices, p)
 		}
@@ -67,7 +71,7 @@ func (s *SignalProcessor) GenerateSignal(ctx context.Context, shortPeriod, longP
 	}
 
 	if len(shortSMA) == 0 || len(longSMA) == 0 {
-		return nil, fmt.Errorf("not enough data to calculate SMAs")
+		return nil, errors.New("not enough data to calculate SMAs")
 	}
 
 	lastShortSMA := shortSMA[len(shortSMA)-1]
@@ -110,12 +114,15 @@ func calculateSMA(prices []float64, period int) []float64 {
 	}
 
 	sma := make([]float64, len(prices)-period+1)
+
 	for i := 0; i <= len(prices)-period; i++ {
 		sum := 0.0
-		for j := 0; j < period; j++ {
+		for j := range period {
 			sum += prices[i+j]
 		}
+
 		sma[i] = sum / float64(period)
 	}
+
 	return sma
 }

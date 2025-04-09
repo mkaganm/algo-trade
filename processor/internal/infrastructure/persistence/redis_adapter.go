@@ -37,5 +37,6 @@ func (p *RedisSignalPublisher) PublishSignal(ctx context.Context, signal domain.
 	if err != nil {
 		return fmt.Errorf("failed to add signal to Redis Stream: %w", err)
 	}
+
 	return nil
 }

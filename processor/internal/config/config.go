@@ -30,12 +30,14 @@ func Load() *Config {
 	shortPeriod, err := strconv.Atoi(getEnv("SHORT_PERIOD", "50"))
 	if err != nil {
 		log.Printf("Invalid SHORT_PERIOD value, using default: %v", err)
+
 		shortPeriod = 50
 	}
 
 	longPeriod, err := strconv.Atoi(getEnv("LONG_PERIOD", "200"))
 	if err != nil {
 		log.Printf("Invalid LONG_PERIOD value, using default: %v", err)
+
 		longPeriod = 200
 	}
 
@@ -56,5 +58,6 @@ func getEnv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
+
 	return defaultValue
 }
