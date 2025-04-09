@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"os/signal"
@@ -42,8 +43,12 @@ func (s *DataCollectorService) Run(ctx context.Context) error {
 		case message := <-msgChan:
 			log.Printf("Received data: %s", message)
 
+			var data OrderBookData
+			// fixme : add error handling
+			_ = json.Unmarshal(message, &data)
+
 			update := OrderBookUpdate{
-				Data:      string(message),
+				Data:      data,
 				Timestamp: time.Now(),
 			}
 
