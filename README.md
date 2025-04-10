@@ -161,6 +161,9 @@ and the project's code was written according to these rules.
  - Grafana
  - Docker
  - golinter
+ - fiber
+ - gorilla/websocket
+ - testify
 
 ---
 ### TEST 
@@ -168,10 +171,38 @@ and the project's code was written according to these rules.
 Example tests have been written for SMA calculations and signal processing.
 
 ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/unittest.png)
+
 ---
 
+## EXPLANATIONS
 
-### TODO
-2. A short document that explains:
-   ○ How you would ensure scalability, fault tolerance, and security.
-   ○ Challenges faced and how you solved them.
+#### Challenges faced and how you solved them.
+
+- I had only used Redis as a caching mechanism before. 
+Redis Streams was new to me, and it was a valuable learning experience.
+- I was unfamiliar with cryptocurrency exchanges and SMA 
+(Simple Moving Average) calculations, so I researched and implemented them step by step.
+
+#### How you would ensure scalability, fault tolerance, and security.
+
+Scalability
+- Microservices Architecture: The project is divided into Collector, 
+Processor, and Trader modules, allowing independent scaling.
+- Docker: Services run in containers, enabling easy horizontal scaling.
+- Redis Streams: Handles high-throughput data streams efficiently.
+- Monitoring: Prometheus and Pyroscope identify bottlenecks for optimization.
+
+
+Fault Tolerance
+- Database Replication: MongoDB Replica Sets and Redis ensure high availability.
+- Health Checks: Each service has endpoints to monitor its status.
+- Retry Mechanisms: Implemented for Redis and MongoDB operations.
+- Container Orchestration: Tools like Kubernetes can restart failed services automatically.
+
+
+Security
+- Encryption: TLS/SSL secures data transmission.
+- Authentication: MongoDB and Redis use username/password authentication.
+- Network Isolation: Services run in isolated Docker networks.
+- Code Quality: golangci-lint ensures secure and high-quality code.
+
