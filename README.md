@@ -158,7 +158,11 @@ and the project's code was written according to these rules.
 
 Example tests have been written for SMA calculations and signal processing.
 
-ADD PHOTO
-
+![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/unittest.png)
 ---
 
+
+### TODO
+2. A short document that explains:
+   ○ How you would ensure scalability, fault tolerance, and security.
+   ○ Challenges faced and how you solved them.
