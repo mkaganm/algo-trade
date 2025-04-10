@@ -145,12 +145,20 @@ and the project's code was written according to these rules.
 ---
 # TECHNOLOGIES
 
-FIX FIX FIX
+ - Golang
+ - MongoDB
+ - Redis
+ - Pyroscope
+ - Prometheus
+ - Grafana
+ - Docker
+ - golinter
 
 ---
 ### TEST 
 
- FIX FIX FIX
+
+---
 
 
 ## TODO List
