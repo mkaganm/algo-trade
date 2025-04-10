@@ -156,9 +156,9 @@ and the project's code was written according to these rules.
 ---
 ### TEST 
 
+Example tests have been written for SMA calculations and signal processing.
+
+ADD PHOTO
 
 ---
 
-
-## TODO List
-- [ ] Add test ()
