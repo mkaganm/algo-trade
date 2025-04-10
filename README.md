@@ -166,5 +166,6 @@ and the project's code was written according to these rules.
 - [ ] Add recover for all Go routines
 - [ ] fix processor health check
 - [ ] fix linter processor main.go
+- [ ] fix processor primary and secondary
 - [ ] Add test ()
 - [ ] Add more more comments
