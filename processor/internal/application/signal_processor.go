@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/mkaganm/algo-trade/processor/internal/core/domain"
-	_ "github.com/mkaganm/algo-trade/processor/internal/core/ports/primary" // fixme
 	"github.com/mkaganm/algo-trade/processor/internal/core/ports/secondary"
 )
 
