@@ -120,6 +120,10 @@ sum(node_memory_MemTotal_bytes{job="trader-metrics"} - node_memory_MemAvailable_
 
 ### MongoDB
 
+```
+http://127.0.0.1:8081/db/btc_data/
+```
+
 There are 2 collections in MongoDB.
 - trade_signals: Logs of processed signals
   ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/processlogs.png)
@@ -131,6 +135,11 @@ There are 2 collections in MongoDB.
 ### Redis
 
 Signals are being sent and received via trade_signals_stream in Redis.
+
+```
+http://127.0.0.1:8001/redis-stack/browser
+```
+
 
 ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/redis.png)
 
@@ -152,13 +161,48 @@ and the project's code was written according to these rules.
  - Grafana
  - Docker
  - golinter
+ - fiber
+ - gorilla/websocket
+ - testify
 
 ---
 ### TEST 
 
 Example tests have been written for SMA calculations and signal processing.
 
-ADD PHOTO
+![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/unittest.png)
 
 ---
+
+## EXPLANATIONS
+
+#### Challenges faced and how you solved them.
+
+- I had only used Redis as a caching mechanism before. 
+Redis Streams was new to me, and it was a valuable learning experience.
+- I was unfamiliar with cryptocurrency exchanges and SMA 
+(Simple Moving Average) calculations, so I researched and implemented them step by step.
+
+#### How you would ensure scalability, fault tolerance, and security.
+
+Scalability
+- Microservices Architecture: The project is divided into Collector, 
+Processor, and Trader modules, allowing independent scaling.
+- Docker: Services run in containers, enabling easy horizontal scaling.
+- Redis Streams: Handles high-throughput data streams efficiently.
+- Monitoring: Prometheus and Pyroscope identify bottlenecks for optimization.
+
+
+Fault Tolerance
+- Database Replication: MongoDB Replica Sets and Redis ensure high availability.
+- Health Checks: Each service has endpoints to monitor its status.
+- Retry Mechanisms: Implemented for Redis and MongoDB operations.
+- Container Orchestration: Tools like Kubernetes can restart failed services automatically.
+
+
+Security
+- Encryption: TLS/SSL secures data transmission.
+- Authentication: MongoDB and Redis use username/password authentication.
+- Network Isolation: Services run in isolated Docker networks.
+- Code Quality: golangci-lint ensures secure and high-quality code.
 
