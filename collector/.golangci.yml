@@ -5,6 +5,7 @@ linters:
     - wrapcheck
     - depguard
     - exhaustruct
+    - tagliatelle
 
 run:
   timeout: 5m
