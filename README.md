@@ -120,6 +120,10 @@ sum(node_memory_MemTotal_bytes{job="trader-metrics"} - node_memory_MemAvailable_
 
 ### MongoDB
 
+```
+http://127.0.0.1:8081/db/btc_data/
+```
+
 There are 2 collections in MongoDB.
 - trade_signals: Logs of processed signals
   ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/processlogs.png)
@@ -131,6 +135,11 @@ There are 2 collections in MongoDB.
 ### Redis
 
 Signals are being sent and received via trade_signals_stream in Redis.
+
+```
+http://127.0.0.1:8001/redis-stack/browser
+```
+
 
 ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/redis.png)
 
