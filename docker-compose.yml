@@ -52,8 +52,12 @@ services:
       - pyroscope-data:/var/lib/pyroscope
     command:
       - "server"
+      # - "--enable-ebpf" # Enable eBPF mode
     environment:
       - PYROSCOPE_LOG_LEVEL=info
+    cap_add:
+      - SYS_ADMIN
+    privileged: true
     networks:
       - algotrading_net
     restart: unless-stopped
@@ -124,6 +128,56 @@ services:
     networks:
       - algotrading_net
 
+  collector-metrics:
+    image: prom/node-exporter:latest
+    container_name: collector-metrics
+    restart: always
+    ports:
+      - "9100:9100"
+    networks:
+      - algotrading_net
+    depends_on:
+      - collector
+    command:
+      - '--path.rootfs=/collector'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/collector:ro
+
+  processor-metrics:
+    image: prom/node-exporter:latest
+    container_name: processor-metrics
+    restart: always
+    ports:
+      - "9200:9100"
+    networks:
+      - algotrading_net
+    depends_on:
+      - processor
+    command:
+      - '--path.rootfs=/processor'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/processor:ro
+
+  trader-metrics:
+    image: prom/node-exporter:latest
+    container_name: trader-metrics
+    restart: always
+    ports:
+      - "9300:9100"
+    networks:
+      - algotrading_net
+    depends_on:
+      - trader
+    command:
+      - '--path.rootfs=/trader'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/trader:ro
 
 volumes:
   mongodb_data:
