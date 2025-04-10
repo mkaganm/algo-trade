@@ -87,6 +87,14 @@ MongoDB üzerinde 2 tane collection bulunmaktadır.
 - depth: Toplanan fiyat verileri
   ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/btcdatadb.png)
 ---
+
+### Redis
+
+Redis üzerinde trade_signals_stream ile sinyaller gönderilmekte ve alınmaktadır.
+
+![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/redis.png)
+
+---
   
 
 ### Code Quality
