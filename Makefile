@@ -5,8 +5,11 @@ help:  ## Show this help message
 	@echo "Available commands:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  make %-10s %s\n", $$1, $$2}'
 
+build:  ## Build all services
+	docker-compose build
+
 up:  ## Start all services in detached mode
-	docker-compose up -d --build
+	docker-compose up -d
 
 down:  ## Stop all services
 	docker-compose down
