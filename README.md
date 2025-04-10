@@ -20,49 +20,61 @@ docker-compose build
 docker-compose up -d
 ```
 
-Projeyi başlatmak için docker-compose komutlarını veya 
-tanımlanan make komutlarını kullanabilirsiniz.
+You can start the project using the docker-compose commands or the defined make commands.
 
 ---
 ## DESCRIPTION
 
 ![FLOWCHART](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/flowchart.png)
 
-Algo trade projesini 3 ana modülden oluşmaktadır. Bu modüller sırasıyla;
+The Algo Trade project consists of 3 main modules. These are, respectively:
 - collector
-- proccessor
+- processor
 - trader
 
 ### Collector
-Collector binance üzerinden anlık olarak web socket ile btc/usdt verileri toplar.
-Topladığı bu verileri mongo üzerine yazar.
+The Collector collects real-time BTC/USDT data from Binance via WebSocket.
+It writes the collected data to MongoDB.
 
 ### Processor
-Processor mongo db üzerindeki verileri alır ve işler.
-Bu verilerin sma değerlerini hesaplar. Buna göre BUY veya SELL kararı verir.
-Verdiği kararı mongo db üzerinde loglar.
-Verdiği kararı redis ile trader modülüne streams ile sinyal olarak gönderir.
+The Processor retrieves and processes data from MongoDB. 
+It calculates the SMA values of this data and makes BUY or SELL decisions accordingly. 
+The decision is logged in MongoDB. 
+The decision is sent as a signal to the Trader module via Redis streams.
 
 ### Trader
-Trader modülü redis üzerinden streams ile sinyalleri alır.
-İşlediği sinyaller doğrultusunda redis üzerindeki stream mesajlarını acknowledge eder
-Aldınan sinyaller doğrultusunda buraya alma ve satma komutları entegre edilebilir.
+The Trader module receives signals via Redis streams. 
+It acknowledges the stream messages in Redis based on the processed signals.
+Buy and sell commands can be integrated here based on the received signals.
 
+---
+All services have health check endpoints.
 
-Bütün servisler pyroscope üzerinden metriklerinin prometheusa gönderir.
-Prometheus üzerindeki metrikler grafana ile görselleştirilebilir.
+All services send their metrics to Prometheus via Pyroscope. 
+The metrics in Prometheus can be visualized using Grafana.
 
 ---
 ### HEALTH CHECKER
 
-3 servis içinde health check endpointi bulunmaktadır.
-- collector: http://localhost:8080/healthcheck
-- processor: http://localhost:8081/healthcheck
-- trader: http://localhost:8082/healthcheck
+There are health check endpoints for 3 services.
+- collector:
+```
+curl -X GET http://localhost:8080/healthcheck
+```
+- processor:
+```
+curl -X GET http://localhost:8082/healthcheck
+```
+- trader:
+```
+curl -X GET http://localhost:8083/healthcheck
+```
 
-Collector health check endpointi üzerinden mongo db bağlantısını kontrol eder.
-Processor health check endpointi üzerinden mongo db ve redis bağlantısını kontrol eder.
-Trader health check endpointi üzerinden redis bağlantısını kontrol eder.
+The Collector health check endpoint checks the MongoDB connection. 
+
+The Processor health check endpoint checks the MongoDB and Redis connections. 
+
+The Trader health check endpoint checks the Redis connection.
 
 ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/healthcheck.png)
 
@@ -70,13 +82,13 @@ Trader health check endpointi üzerinden redis bağlantısını kontrol eder.
 
 ### METRICS
 
-Metrikleri toplamak için pyroscope kullanıldı.
-Pyroscope toplanan metrikleri prometheus ile entegre eder.
-Grafana ile görselleştirilebilir.
+Pyroscope is used to collect metrics.
+Pyroscope integrates the collected metrics with Prometheus.
+They can be visualized using Grafana.
 
-Örnek metrik queryleri aşağıda verilmiştir. 
-Pyroscope ve prometheus üzerinden çok daha fazla metrik toplanıyor hali hazırda
-onlarda grafana üzerinden görselleştirilebilir.
+Example metric queries are provided below.
+Many more metrics are already being collected through Pyroscope and Prometheus,
+and they can also be visualized via Grafana.
 
 Collector cpu 
 ```
@@ -109,17 +121,17 @@ GRAFANA PHOTO
 
 ### MongoDB
 
-MongoDB üzerinde 2 tane collection bulunmaktadır.
-- trade_signals: İşlenen sinyallerin logları
+There are 2 collections in MongoDB.
+- trade_signals: Logs of processed signals
   ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/processlogs.png)
 ---
-- depth: Toplanan fiyat verileri
+- depth: Collected price data
   ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/btcdatadb.png)
 ---
 
 ### Redis
 
-Redis üzerinde trade_signals_stream ile sinyaller gönderilmekte ve alınmaktadır.
+Signals are being sent and received via trade_signals_stream in Redis.
 
 ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/redis.png)
 
@@ -127,8 +139,13 @@ Redis üzerinde trade_signals_stream ile sinyaller gönderilmekte ve alınmaktad
   
 
 ### Code Quality
-Code quality için golangci-lint kullanıldı. 
-Ve projedeki kodlar bu kurallara göre yazıldı.
+golangci-lint was used for code quality, 
+and the project's code was written according to these rules.
+
+---
+# TECHNOLOGIES
+
+FIX FIX FIX
 
 ---
 ### TEST 
@@ -139,5 +156,7 @@ Ve projedeki kodlar bu kurallara göre yazıldı.
 ## TODO List
 - [ ] Add log system
 - [ ] Add recover for all Go routines
+- [ ] fix processor health check
+- [ ] fix linter processor main.go
 - [ ] Add test ()
 - [ ] Add more more comments
