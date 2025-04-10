@@ -74,6 +74,35 @@ Metrikleri toplamak için pyroscope kullanıldı.
 Pyroscope toplanan metrikleri prometheus ile entegre eder.
 Grafana ile görselleştirilebilir.
 
+Örnek metrik queryleri aşağıda verilmiştir. 
+Pyroscope ve prometheus üzerinden çok daha fazla metrik toplanıyor hali hazırda
+onlarda grafana üzerinden görselleştirilebilir.
+
+Collector cpu 
+```
+sum(rate(node_cpu_seconds_total{job="collector-metrics", mode!="idle"}[1m]))
+```
+Collector memory 
+```
+sum(node_memory_MemTotal_bytes{job="processor-metrics"} - node_memory_MemAvailable_bytes{job="processor-metrics"})
+```
+Processor cpu 
+```
+sum(rate(node_cpu_seconds_total{job="processor-metrics", mode!="idle"}[1m]))
+```
+Processor memory 
+```
+sum(node_memory_MemTotal_bytes{job="processor-metrics"} - node_memory_MemAvailable_bytes{job="processor-metrics"})
+```
+Trader cpu 
+```
+sum(rate(node_cpu_seconds_total{job="processor-metrics", mode!="idle"}[1m]))
+```
+Trader memory
+```
+sum(node_memory_MemTotal_bytes{job="trader-metrics"} - node_memory_MemAvailable_bytes{job="trader-metrics"})
+```
+
 GRAFANA PHOTO
 ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/grafana.png)
 ---
