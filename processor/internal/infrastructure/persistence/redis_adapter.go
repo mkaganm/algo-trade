@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/mkaganm/algo-trade/processor/internal/core/domain"
-	_ "github.com/mkaganm/algo-trade/processor/internal/core/ports/secondary" // fixme :
 )
 
 type RedisSignalPublisher struct {

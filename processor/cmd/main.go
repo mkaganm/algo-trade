@@ -43,7 +43,7 @@ func main() {
 	// Initialize scheduler
 	cronScheduler := scheduler.NewCronScheduler()
 
-	_, err = cronScheduler.Schedule("*/1 * * * *", func() {
+	_, err = cronScheduler.Schedule("*/5 * * * *", func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 

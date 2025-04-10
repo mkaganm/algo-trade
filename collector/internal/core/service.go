@@ -44,8 +44,13 @@ func (s *DataCollectorService) Run(ctx context.Context) error {
 			log.Printf("Received data: %s", message)
 
 			var data OrderBookData
-			// fixme : add error handling
-			_ = json.Unmarshal(message, &data)
+
+			err := json.Unmarshal(message, &data)
+			if err != nil {
+				log.Printf("Failed to unmarshal message: %v", err)
+
+				continue
+			}
 
 			update := OrderBookUpdate{
 				Data:      data,

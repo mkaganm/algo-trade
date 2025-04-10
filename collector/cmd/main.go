@@ -14,6 +14,7 @@ import (
 	"github.com/mkaganm/algo-trade/collector/internal/adapters/mongodb"
 	"github.com/mkaganm/algo-trade/collector/internal/config"
 	"github.com/mkaganm/algo-trade/collector/internal/core"
+	"github.com/mkaganm/algo-trade/collector/internal/helpers"
 )
 
 const (
@@ -54,15 +55,8 @@ func main() {
 		return nil
 	})
 
-	// fixme : add recover go routine and spearete roitine function
 	// Start health check endpoint
-	go func() {
-		log.Println("Starting health check endpoint at :8080")
-
-		if err := app.Listen(":8080"); err != nil {
-			log.Printf("Failed to start health check endpoint: %v", err)
-		}
-	}()
+	go startHealthCheckEndpoint(app)
 
 	// Create and run service
 	service := core.NewDataCollectorService(wsClient, repo)
@@ -84,4 +78,14 @@ func main() {
 	}
 
 	log.Println("Application shutdown complete")
+}
+
+func startHealthCheckEndpoint(app *fiber.App) {
+	defer helpers.RecoverRoutine(make(chan error)) // Recover from panics
+
+	log.Println("Starting health check endpoint at :8080")
+
+	if err := app.Listen(":8080"); err != nil {
+		log.Printf("Failed to start health check endpoint: %v", err)
+	}
 }

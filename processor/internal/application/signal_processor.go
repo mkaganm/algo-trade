@@ -8,8 +8,13 @@ import (
 	"time"
 
 	"github.com/mkaganm/algo-trade/processor/internal/core/domain"
-	_ "github.com/mkaganm/algo-trade/processor/internal/core/ports/primary" // fixme
 	"github.com/mkaganm/algo-trade/processor/internal/core/ports/secondary"
+)
+
+// Define static errors.
+var (
+	ErrNotEnoughDataPoints = errors.New("not enough data points to calculate SMAs")
+	ErrNotEnoughData       = errors.New("not enough data to process signals")
 )
 
 type SignalProcessor struct {
@@ -30,9 +35,12 @@ func NewSignalProcessor(
 	}
 }
 
-func (s *SignalProcessor) CalculateSMAs(prices []float64, shortPeriod, longPeriod int) (shortSMA, longSMA []float64, err error) {
+func (s *SignalProcessor) CalculateSMAs(
+	prices []float64, shortPeriod,
+	longPeriod int,
+) (shortSMA, longSMA []float64, err error) {
 	if len(prices) < longPeriod {
-		return nil, nil, errors.New("not enough data points to calculate SMAs")
+		return nil, nil, ErrNotEnoughDataPoints
 	}
 
 	shortSMA = calculateSMA(prices, shortPeriod)
@@ -41,28 +49,26 @@ func (s *SignalProcessor) CalculateSMAs(prices []float64, shortPeriod, longPerio
 	return shortSMA, longSMA, nil
 }
 
-func (s *SignalProcessor) GenerateSignal(ctx context.Context, shortPeriod, longPeriod int) (*domain.TradeSignal, error) {
+func (s *SignalProcessor) GenerateSignal(
+	ctx context.Context,
+	shortPeriod int,
+	longPeriod int,
+) (*domain.TradeSignal, error) {
 	records, err := s.orderBookRepo.GetLatestRecords(ctx, longPeriod)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get order book records: %w", err)
 	}
 
 	if len(records) < longPeriod {
-		return nil, errors.New("not enough data to process signals")
+		return nil, ErrNotEnoughData
 	}
 
 	// Extract prices
 	var prices []float64
 
-	for _, record := range records {
-		if len(record.Data.BidUpdates) > 0 {
-			price := record.Data.BidUpdates[0][0]
-
-			var p float64
-
-			fmt.Sscanf(price, "%f", &p)
-			prices = append(prices, p)
-		}
+	prices, err = extractPrices(records)
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract prices: %w", err)
 	}
 
 	shortSMA, longSMA, err := s.CalculateSMAs(prices, shortPeriod, longPeriod)
@@ -71,22 +77,13 @@ func (s *SignalProcessor) GenerateSignal(ctx context.Context, shortPeriod, longP
 	}
 
 	if len(shortSMA) == 0 || len(longSMA) == 0 {
-		return nil, errors.New("not enough data to calculate SMAs")
+		return nil, ErrNotEnoughDataPoints
 	}
 
 	lastShortSMA := shortSMA[len(shortSMA)-1]
 	lastLongSMA := longSMA[len(longSMA)-1]
 
-	var signal string
-
-	switch {
-	case lastShortSMA > lastLongSMA:
-		signal = domain.Buy
-	case lastShortSMA < lastLongSMA:
-		signal = domain.Sell
-	default:
-		signal = domain.Neutral
-	}
+	signal := selectSignal(lastShortSMA, lastLongSMA)
 
 	tradeSignal := &domain.TradeSignal{
 		Signal:    signal,
@@ -106,6 +103,42 @@ func (s *SignalProcessor) GenerateSignal(ctx context.Context, shortPeriod, longP
 	}
 
 	return tradeSignal, nil
+}
+
+func selectSignal(lastShortSMA, lastLongSMA float64) string {
+	var signal string
+
+	switch {
+	case lastShortSMA > lastLongSMA:
+		signal = domain.Buy
+	case lastShortSMA < lastLongSMA:
+		signal = domain.Sell
+	default:
+		signal = domain.Neutral
+	}
+
+	return signal
+}
+
+func extractPrices(records []domain.OrderBookRecord) ([]float64, error) {
+	var prices []float64
+
+	for _, record := range records {
+		if len(record.Data.BidUpdates) > 0 {
+			price := record.Data.BidUpdates[0][0]
+
+			var p float64
+
+			_, err := fmt.Sscanf(price, "%f", &p)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse price: %w", err)
+			}
+
+			prices = append(prices, p)
+		}
+	}
+
+	return prices, nil
 }
 
 func calculateSMA(prices []float64, period int) []float64 {

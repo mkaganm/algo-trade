@@ -5,6 +5,8 @@ linters:
     - wrapcheck
     - depguard
     - exhaustruct
+    - tagliatelle
+    - nonamedreturns
 
 run:
   timeout: 5m

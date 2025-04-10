@@ -40,8 +40,12 @@ func (mp *MessageProcessor) ProcessMessages(ctx context.Context) {
 		return
 	}
 
-	// fixme : handle errors
-	processedData, _ := json.Marshal(msg)
+	processedData, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("Error marshalling message: %v", err)
+
+		return
+	}
 
 	err = mp.redisRepo.WriteProcessedMessage(ctx, map[string]interface{}{
 		"original_id":   id,

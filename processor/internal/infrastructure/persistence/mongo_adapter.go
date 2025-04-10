@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mkaganm/algo-trade/processor/internal/config"
 	"github.com/mkaganm/algo-trade/processor/internal/core/domain"
-	_ "github.com/mkaganm/algo-trade/processor/internal/core/ports/secondary" // fixme
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// fixme env loading
+const (
+	repositoryTimeout = 10 * time.Second
+)
 
 type MongoOrderBookRepository struct {
 	client       *mongo.Client
@@ -22,17 +22,12 @@ type MongoOrderBookRepository struct {
 }
 
 func NewMongoOrderBookRepository(uri, dbName, collection string) (*MongoOrderBookRepository, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create MongoDB client: %w", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), repositoryTimeout)
 	defer cancel()
 
-	err = client.Connect(ctx)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
+		return nil, fmt.Errorf("failed to create and connect MongoDB client: %w", err)
 	}
 
 	return &MongoOrderBookRepository{
@@ -43,7 +38,7 @@ func NewMongoOrderBookRepository(uri, dbName, collection string) (*MongoOrderBoo
 }
 
 func (r *MongoOrderBookRepository) GetLatestRecords(ctx context.Context, limit int) ([]domain.OrderBookRecord, error) {
-	r.collection = config.Load().CollectionName
+	r.collection = "depth"
 
 	collection := r.client.Database(r.databaseName).Collection(r.collection)
 
@@ -66,7 +61,7 @@ func (r *MongoOrderBookRepository) GetLatestRecords(ctx context.Context, limit i
 }
 
 func (r *MongoOrderBookRepository) SaveSignal(ctx context.Context, signal domain.TradeSignal) error {
-	r.collection = config.Load().SignalsColName
+	r.collection = "trade_signals"
 
 	collection := r.client.Database(r.databaseName).Collection(r.collection)
 

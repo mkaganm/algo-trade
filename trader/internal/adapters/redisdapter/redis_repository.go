@@ -7,6 +7,10 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+const (
+	readGroupCount = 10
+)
+
 type RedisRepository struct {
 	client *redis.Client
 }
@@ -27,7 +31,7 @@ func (r *RedisRepository) ReadMessages(ctx context.Context) ([]map[string]interf
 		Group:    "signal_group",
 		Consumer: "signal_consumer",
 		Streams:  []string{"trade_signals_stream", ">"},
-		Count:    10,
+		Count:    readGroupCount,
 		Block:    0,
 	}).Result()
 	if err != nil {

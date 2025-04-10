@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
@@ -11,6 +10,7 @@ import (
 	"github.com/mkaganm/algo-trade/trader/internal/adapters/redisdapter"
 	"github.com/mkaganm/algo-trade/trader/internal/app"
 	"github.com/mkaganm/algo-trade/trader/internal/config"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -27,13 +27,19 @@ func main() {
 	redisRepo := redisdapter.NewRedisRepository(rdb)
 	messageProcessor := app.NewMessageProcessor(redisRepo)
 
-	// Start message processing in a separate goroutine
-	go func() {
-		for {
-			messageProcessor.ProcessMessages(context.Background())
-			time.Sleep(2 * time.Second)
-		}
-	}()
+	// Initialize cron job
+	c := cron.New()
+
+	_, err := c.AddFunc("@every 5s", func() {
+		messageProcessor.ProcessMessages(context.Background())
+	})
+	if err != nil {
+		log.Printf("Failed to add cron job: %v", err)
+	}
+
+	c.Start()
+
+	defer c.Stop()
 
 	// Initialize Fiber app
 	app := fiber.New()
@@ -44,5 +50,5 @@ func main() {
 
 	// Start the server
 	log.Printf("Starting server on port %s...", cfg.AppPort)
-	log.Fatal(app.Listen(":" + cfg.AppPort))
+	log.Println(app.Listen(":" + cfg.AppPort))
 }
