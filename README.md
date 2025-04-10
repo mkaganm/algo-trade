@@ -26,7 +26,7 @@ tanımlanan make komutlarını kullanabilirsiniz.
 ---
 ## DESCRIPTION
 
-![FLOWCHART](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/1.png)
+![FLOWCHART](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/flowchart.png)
 
 Algo trade projesini 3 ana modülden oluşmaktadır. Bu modüller sırasıyla;
 - collector
@@ -64,7 +64,7 @@ Collector health check endpointi üzerinden mongo db bağlantısını kontrol ed
 Processor health check endpointi üzerinden mongo db ve redis bağlantısını kontrol eder.
 Trader health check endpointi üzerinden redis bağlantısını kontrol eder.
 
-HEALCHECK PHOTO
+![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/healthcheck.png)
 
 ---
 
@@ -75,8 +75,29 @@ Pyroscope toplanan metrikleri prometheus ile entegre eder.
 Grafana ile görselleştirilebilir.
 
 GRAFANA PHOTO
+![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/grafana.png)
+---
+
+### MongoDB
+
+MongoDB üzerinde 2 tane collection bulunmaktadır.
+- trade_signals: İşlenen sinyallerin logları
+  ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/processlogs.png)
+---
+- depth: Toplanan fiyat verileri
+  ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/btcdatadb.png)
+---
+  
+
+### Code Quality
+Code quality için golangci-lint kullanıldı. 
+Ve projedeki kodlar bu kurallara göre yazıldı.
 
 ---
+### TEST 
+
+ FIX FIX FIX
+
 
 ## TODO List
 - [ ] Add log system
