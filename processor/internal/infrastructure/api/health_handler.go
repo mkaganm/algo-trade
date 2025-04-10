@@ -9,6 +9,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+const (
+	checkTimeout = 5 * time.Second
+)
+
 type HealthHandler struct {
 	mongoClient *mongo.Client
 	redisClient *redis.Client
@@ -22,7 +26,7 @@ func NewHealthHandler(mongoClient *mongo.Client, redisClient *redis.Client) *Hea
 }
 
 func (h *HealthHandler) Check(c *fiber.Ctx) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), checkTimeout)
 	defer cancel()
 
 	// MongoDB health check

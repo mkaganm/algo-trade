@@ -16,16 +16,37 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	cronTimeout    = 30 * time.Second
+	contextTimeout = 10 * time.Second
+)
+
 func main() {
 	// Load configuration
 	cfg := config.Load()
 
+	// Initialize dependencies
+	_, signalProcessor, cronScheduler := initializeDependencies(cfg)
+
+	// Schedule tasks
+	scheduleTasks(cronScheduler, signalProcessor, cfg)
+
+	// Start HTTP server
+	startHTTPServer(cfg)
+
+	// Keep the application running
+	select {}
+}
+
+func initializeDependencies(
+	cfg *config.Config,
+) (
+	*persistence.MongoOrderBookRepository,
+	*application.SignalProcessor,
+	*scheduler.CronScheduler,
+) {
 	// Initialize MongoDB
-	mongoRepo, err := persistence.NewMongoOrderBookRepository(
-		cfg.MongoURI,
-		cfg.DatabaseName,
-		cfg.CollectionName,
-	)
+	mongoRepo, err := persistence.NewMongoOrderBookRepository(cfg.MongoURI, cfg.DatabaseName, cfg.CollectionName)
 	if err != nil {
 		log.Fatalf("Failed to initialize MongoDB repository: %v", err)
 	}
@@ -34,17 +55,21 @@ func main() {
 	redisPublisher := persistence.NewRedisSignalPublisher(cfg.RedisAddr, cfg.RedisStream)
 
 	// Initialize application services
-	signalProcessor := application.NewSignalProcessor(
-		mongoRepo,
-		mongoRepo, // Assuming MongoOrderBookRepository also implements SignalRepository
-		redisPublisher,
-	)
+	signalProcessor := application.NewSignalProcessor(mongoRepo, mongoRepo, redisPublisher)
 
 	// Initialize scheduler
 	cronScheduler := scheduler.NewCronScheduler()
 
-	_, err = cronScheduler.Schedule("*/1 * * * *", func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	return mongoRepo, signalProcessor, cronScheduler
+}
+
+func scheduleTasks(
+	cronScheduler *scheduler.CronScheduler,
+	signalProcessor *application.SignalProcessor,
+	cfg *config.Config,
+) {
+	_, err := cronScheduler.Schedule("*/1 * * * *", func() {
+		ctx, cancel := context.WithTimeout(context.Background(), cronTimeout)
 		defer cancel()
 
 		signal, err := signalProcessor.GenerateSignal(ctx, cfg.ShortPeriod, cfg.LongPeriod)
@@ -61,27 +86,24 @@ func main() {
 	}
 
 	cronScheduler.Start()
-
 	defer cronScheduler.Stop()
+}
 
-	// Initialize HTTP server
+func startHTTPServer(cfg *config.Config) {
 	app := fiber.New()
 
 	// Create MongoDB client for health check
-	mongoClient, err := mongo.NewClient(options.Client().ApplyURI(cfg.MongoURI))
-	if err != nil {
-		log.Fatalf("Failed to create MongoDB client: %v", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), contextTimeout)
 	defer cancel()
 
-	err = mongoClient.Connect(ctx)
+	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoURI))
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		log.Printf("Failed to create and connect MongoDB client: %v", err)
+
+		return
 	}
 
-	defer mongoClient.Disconnect(ctx)
+	defer mongoClient.Disconnect(ctx) //nolint
 
 	// Create Redis client for health check
 	redisClient := redis.NewClient(&redis.Options{
@@ -98,7 +120,4 @@ func main() {
 			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
-
-	// Keep the application running
-	select {}
 }

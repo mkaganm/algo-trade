@@ -15,6 +15,10 @@ import (
 
 // fixme env loading
 
+const (
+	repositoryTimeout = 10 * time.Second
+)
+
 type MongoOrderBookRepository struct {
 	client       *mongo.Client
 	databaseName string
@@ -22,17 +26,12 @@ type MongoOrderBookRepository struct {
 }
 
 func NewMongoOrderBookRepository(uri, dbName, collection string) (*MongoOrderBookRepository, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create MongoDB client: %w", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), repositoryTimeout)
 	defer cancel()
 
-	err = client.Connect(ctx)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
+		return nil, fmt.Errorf("failed to create and connect MongoDB client: %w", err)
 	}
 
 	return &MongoOrderBookRepository{
