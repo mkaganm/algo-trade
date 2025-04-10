@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/mkaganm/algo-trade/processor/internal/application"
 	"github.com/mkaganm/algo-trade/processor/internal/config"
+	"github.com/mkaganm/algo-trade/processor/internal/helpers"
 	"github.com/mkaganm/algo-trade/processor/internal/infrastructure/api"
 	"github.com/mkaganm/algo-trade/processor/internal/infrastructure/persistence"
 	"github.com/mkaganm/algo-trade/processor/internal/infrastructure/scheduler"
@@ -16,6 +17,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	signalProcessingTimeout  = 30 * time.Second
+	mongoDBConnectionTimeout = 10 * time.Second
+)
+
+//nolint:funlen
 func main() {
 	// Load configuration
 	cfg := config.Load()
@@ -44,7 +51,7 @@ func main() {
 	cronScheduler := scheduler.NewCronScheduler()
 
 	_, err = cronScheduler.Schedule("*/5 * * * *", func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), signalProcessingTimeout)
 		defer cancel()
 
 		signal, err := signalProcessor.GenerateSignal(ctx, cfg.ShortPeriod, cfg.LongPeriod)
@@ -68,20 +75,19 @@ func main() {
 	app := fiber.New()
 
 	// Create MongoDB client for health check
-	mongoClient, err := mongo.NewClient(options.Client().ApplyURI(cfg.MongoURI))
-	if err != nil {
-		log.Fatalf("Failed to create MongoDB client: %v", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), mongoDBConnectionTimeout)
 	defer cancel()
 
-	err = mongoClient.Connect(ctx)
+	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoURI))
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		log.Printf("Failed to connect to MongoDB: %v", err)
 	}
 
-	defer mongoClient.Disconnect(ctx)
+	defer func() {
+		if err := mongoClient.Disconnect(ctx); err != nil {
+			log.Printf("Failed to disconnect MongoDB client: %v", err)
+		}
+	}()
 
 	// Create Redis client for health check
 	redisClient := redis.NewClient(&redis.Options{
@@ -93,12 +99,16 @@ func main() {
 	app.Get("/healthcheck", healthHandler.Check)
 
 	// Start server
-	go func() {
-		if err := app.Listen(cfg.ServerPort); err != nil {
-			log.Fatalf("Failed to start server: %v", err)
-		}
-	}()
+	go startServer(app, cfg.ServerPort)
 
 	// Keep the application running
 	select {}
+}
+
+func startServer(app *fiber.App, serverPort string) {
+	defer helpers.RecoverRoutine(make(chan error))
+
+	if err := app.Listen(serverPort); err != nil {
+		log.Printf("Failed to start server: %v", err)
+	}
 }

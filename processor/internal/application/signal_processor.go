@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/mkaganm/algo-trade/processor/internal/core/domain"
-	"github.com/mkaganm/algo-trade/processor/internal/core/ports/secondary"
+	"github.com/mkaganm/algo-trade/processor/internal/core/ports"
 )
 
 // Define static errors.
@@ -18,15 +18,15 @@ var (
 )
 
 type SignalProcessor struct {
-	orderBookRepo secondary.OrderBookRepository
-	signalRepo    secondary.SignalRepository
-	publisher     secondary.SignalPublisher
+	orderBookRepo ports.OrderBookRepository
+	signalRepo    ports.SignalRepository
+	publisher     ports.SignalPublisher
 }
 
 func NewSignalProcessor(
-	orderBookRepo secondary.OrderBookRepository,
-	signalRepo secondary.SignalRepository,
-	publisher secondary.SignalPublisher,
+	orderBookRepo ports.OrderBookRepository,
+	signalRepo ports.SignalRepository,
+	publisher ports.SignalPublisher,
 ) *SignalProcessor {
 	return &SignalProcessor{
 		orderBookRepo: orderBookRepo,

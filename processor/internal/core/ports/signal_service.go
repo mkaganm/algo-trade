@@ -1,4 +1,4 @@
-package primary
+package ports
 
 import (
 	"github.com/mkaganm/algo-trade/processor/internal/core/domain"

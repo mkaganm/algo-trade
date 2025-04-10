@@ -115,7 +115,6 @@ Trader memory
 sum(node_memory_MemTotal_bytes{job="trader-metrics"} - node_memory_MemAvailable_bytes{job="trader-metrics"})
 ```
 
-GRAFANA PHOTO
 ![](https://raw.githubusercontent.com/mkaganm/algo-trade/refs/heads/master/documents/grafana.png)
 ---
 
@@ -157,15 +156,9 @@ and the project's code was written according to these rules.
 ---
 ### TEST 
 
+Example tests have been written for SMA calculations and signal processing.
+
+ADD PHOTO
 
 ---
 
-
-## TODO List
-- [ ] Add log system
-- [ ] Add recover for all Go routines
-- [ ] fix processor health check
-- [ ] fix linter processor main.go
-- [ ] fix processor primary and secondary
-- [ ] Add test ()
-- [ ] Add more more comments
