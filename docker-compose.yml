@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:latest
@@ -37,9 +39,48 @@ services:
     restart: always
     ports:
       - "6379:6379"
-      - "8001:8001" # Redis Stack UI
+      - "8001:8001"
     networks:
       - algotrading_net
+
+  pyroscope:
+    image: pyroscope/pyroscope:latest
+    container_name: pyroscope
+    ports:
+      - "4040:4040"  # Web UI
+    volumes:
+      - pyroscope-data:/var/lib/pyroscope
+    command:
+      - "server"
+    environment:
+      - PYROSCOPE_LOG_LEVEL=info
+    networks:
+      - algotrading_net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - algotrading_net
+    depends_on:
+      - pyroscope
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_INSTALL_PLUGINS=pyroscope-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks:
+      - algotrading_net
+    depends_on:
+      - prometheus
 
   collector:
     build:
@@ -86,6 +127,8 @@ services:
 
 volumes:
   mongodb_data:
+  pyroscope-data:
+  grafana-data:
 
 networks:
   algotrading_net:
